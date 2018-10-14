@@ -15,7 +15,7 @@ setup(
     long_description_content_type="text/markdown",
     license="MIT",
     keywords="socket pipe",
-    url="https://github.com/aragaer/runner",
+    url="https://github.com/aragaer/channels",
     packages=["channels"],
     classifiers=[
         "Topic :: Utilities",
