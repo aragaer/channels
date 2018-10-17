@@ -42,7 +42,7 @@ class SocketChannelTest(unittest.TestCase):
     def test_close_read(self):
         self._channel.close()
 
-        with self.assertRaises(OSError) as ose:
+        with self.assertRaises(IOError) as ose:
             self._client.recv(1)
             self.assertEqual(ose.exception.error_code, 9)  # EBADF
 
@@ -55,7 +55,7 @@ class SocketChannelTest(unittest.TestCase):
     def test_close_write(self):
         self._channel.close()
 
-        with self.assertRaises(OSError) as ose:
+        with self.assertRaises(IOError) as ose:
             self._client.send(b' ')
             self.assertEqual(ose.exception.error_code, 9)  # EBADF
 

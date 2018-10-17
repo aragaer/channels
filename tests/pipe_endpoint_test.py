@@ -11,7 +11,7 @@ class PipeChannelTest(unittest.TestCase):
         that_faucet_fd, this_sink_fd = os.pipe()
         channel = PipeChannel(faucet=that_faucet_fd)
 
-        sink_file = os.fdopen(this_sink_fd, mode='wb')
+        sink_file = os.fdopen(this_sink_fd, 'wb')
         sink_file.write(b'hello, world')
         sink_file.flush()
 
@@ -25,23 +25,24 @@ class PipeChannelTest(unittest.TestCase):
 
         channel.write(b'hello, world\n')
 
-        faucet_file = os.fdopen(this_faucet_fd, mode='rb')
+        faucet_file = os.fdopen(this_faucet_fd, 'rb')
         fl = fcntl.fcntl(this_faucet_fd, fcntl.F_GETFL)
         fcntl.fcntl(this_faucet_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
         self.assertEqual(faucet_file.readline(), b'hello, world\n')
-        self.assertEqual(faucet_file.readline(), b'')
-        self.assertEqual(faucet_file.readline(), b'')
+        with self.assertRaises(IOError) as ioe:
+            faucet_file.readline()
+            self.assertEqual(ioe.errno, 11)
 
     def test_read_write(self):
         that_faucet_fd, this_sink_fd = os.pipe()
         this_faucet_fd, that_sink_fd = os.pipe()
         channel = PipeChannel(faucet=that_faucet_fd, sink=that_sink_fd)
 
-        sink_file = os.fdopen(this_sink_fd, mode='wb')
+        sink_file = os.fdopen(this_sink_fd, 'wb')
         sink_file.write(b'hello, world')
         sink_file.flush()
-        faucet_file = os.fdopen(this_faucet_fd, mode='rb')
+        faucet_file = os.fdopen(this_faucet_fd, 'rb')
         fl = fcntl.fcntl(this_faucet_fd, fcntl.F_GETFL)
         fcntl.fcntl(this_faucet_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
@@ -51,8 +52,9 @@ class PipeChannelTest(unittest.TestCase):
         self.assertEqual(channel.read(), b'')
         self.assertEqual(channel.read(), b'')
         self.assertEqual(faucet_file.readline(), b'hello, world\n')
-        self.assertEqual(faucet_file.readline(), b'')
-        self.assertEqual(faucet_file.readline(), b'')
+        with self.assertRaises(IOError) as ioe:
+            faucet_file.readline()
+            self.assertEqual(ioe.errno, 11)
 
     def test_write_list(self):
         this_faucet_fd, that_sink_fd = os.pipe()
@@ -60,13 +62,14 @@ class PipeChannelTest(unittest.TestCase):
 
         channel.write(b'hello, ', b'world\n')
 
-        faucet_file = os.fdopen(this_faucet_fd, mode='rb')
+        faucet_file = os.fdopen(this_faucet_fd, 'rb')
         fl = fcntl.fcntl(this_faucet_fd, fcntl.F_GETFL)
         fcntl.fcntl(this_faucet_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
         self.assertEqual(faucet_file.readline(), b'hello, world\n')
-        self.assertEqual(faucet_file.readline(), b'')
-        self.assertEqual(faucet_file.readline(), b'')
+        with self.assertRaises(IOError) as ioe:
+            faucet_file.readline()
+            self.assertEqual(ioe.errno, 11)
 
     def test_closed_read(self):
         that_faucet_fd, _ = os.pipe()
@@ -109,7 +112,7 @@ class PipeChannelTest(unittest.TestCase):
         that_faucet_fd, this_sink_fd = os.pipe()
         channel = PipeChannel(faucet=that_faucet_fd)
 
-        sink_file = os.fdopen(this_sink_fd, mode='wb')
+        sink_file = os.fdopen(this_sink_fd, 'wb')
         sink_file.write(b'hello, world')
         sink_file.close()
 

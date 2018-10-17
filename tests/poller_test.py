@@ -17,7 +17,7 @@ class PollerTest(unittest.TestCase):
         self._poller.close_all()
 
     def test_blocking_poll(self):
-        with self.assertRaisesRegex(Exception, "timeout"), timeout(0.02):
+        with self.assertRaisesRegexp(Exception, "timeout"), timeout(0.02):
             self._poller.poll()
 
     def test_timed_poll(self):
@@ -26,7 +26,7 @@ class PollerTest(unittest.TestCase):
         self.assertEqual(list(result), [])
 
     def test_timed_out_poll(self):
-        with self.assertRaisesRegex(Exception, "timeout"), timeout(0.02):
+        with self.assertRaisesRegexp(Exception, "timeout"), timeout(0.02):
             self._poller.poll(0.03)
 
     def test_poll_data(self):
@@ -91,7 +91,7 @@ class PollerTest(unittest.TestCase):
 
         self._poller.close_all()
 
-        with timeout(0.01), self.assertRaises(OSError):
+        with timeout(0.01), self.assertRaises(IOError):
             serv.accept()
 
     def test_unregister(self):
@@ -101,7 +101,7 @@ class PollerTest(unittest.TestCase):
 
         self._poller.unregister(chan)
 
-        with self.assertRaisesRegex(Exception, "timeout"), timeout(0.02):
+        with self.assertRaisesRegexp(Exception, "timeout"), timeout(0.02):
             self._poller.poll()
 
     def test_closed(self):

@@ -8,7 +8,8 @@ class EndpointClosedException(Exception):
     pass
 
 
-class Channel(metaclass=ABCMeta):
+class Channel(object):
+    metaclass=ABCMeta
 
     @abstractmethod
     def read(self): #pragma: no cover
@@ -35,9 +36,9 @@ class PipeChannel(Channel):
         if faucet is not None:
             fl = fcntl.fcntl(faucet, fcntl.F_GETFL)
             fcntl.fcntl(faucet, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-            self._in = os.fdopen(faucet, mode='rb', buffering=0)
+            self._in = os.fdopen(faucet, 'rb', 0)
         if sink is not None:
-            self._out = os.fdopen(sink, mode='wb', buffering=0)
+            self._out = os.fdopen(sink, 'wb', 0)
 
     def read(self):
         try:
@@ -47,6 +48,10 @@ class PipeChannel(Channel):
             if not result:
                 raise EndpointClosedException()
             return result
+        except IOError as ex:
+            if ex.errno == 11:
+                return b''
+            raise EndpointClosedException(ex)
         except (ValueError, OSError) as ex:
             raise EndpointClosedException(ex)
 
@@ -55,7 +60,7 @@ class PipeChannel(Channel):
             for d in data:
                 self._out.write(d)
             self._out.flush()
-        except (ValueError, OSError) as ex:
+        except (ValueError, OSError, IOError) as ex:
             raise EndpointClosedException(ex)
 
     def close(self):
@@ -67,7 +72,7 @@ class PipeChannel(Channel):
     def get_fd(self):
         if self._in is not None:
             return self._in.fileno()
-        return super().get_fd()
+        return super(PipeChannel, self).get_fd()
 
 
 class SocketChannel(Channel):
@@ -82,8 +87,10 @@ class SocketChannel(Channel):
             if not result:
                 raise EndpointClosedException()
             return result
-        except BlockingIOError:
-            return b''
+        except IOError as ex:
+            if ex.errno == 11:
+                return b''
+            raise EndpointClosedException(ex)
         except OSError as ex:
             raise EndpointClosedException(ex)
 
@@ -91,7 +98,7 @@ class SocketChannel(Channel):
         try:
             for d in data:
                 self._sock.send(d)
-        except OSError as ex:
+        except (IOError, OSError) as ex:
             raise EndpointClosedException(ex)
 
     def close(self):
