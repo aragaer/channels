@@ -90,4 +90,5 @@ Performs a single call to `select.poll()`. `timeout` is the number of
 seconds for polling or `None` for infinite polling. Return value is a
 list of pairs in format of `(data, channel)` for channels and `((addr,
 client_channel), sock)` for server sockets. `addr` depends on socket
-type.
+type. For line-based channels single `poll` call might return multiple
+results if there are several lines.

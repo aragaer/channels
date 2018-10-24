@@ -5,7 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Poller will return multiple results for line-based channels when there are several lines
+
 ### Fixed
+- Poller will no longer send empty messages for line-based channels
 - Bettercodehub link in README
 
 ## 0.1.1 - 2018-10-14

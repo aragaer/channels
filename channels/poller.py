@@ -2,7 +2,7 @@ import logging
 import select
 import time
 
-from .channel import EndpointClosedException, SocketChannel
+from .channel import EndpointClosedException, LineChannel, SocketChannel
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,8 +23,15 @@ class Poller:
             if fd in self._channels:
                 channel = self._channels[fd]
                 try:
-                    data = channel.read()
-                    if data:
+                    if isinstance(channel, LineChannel):
+                        while True:
+                            data = channel.read()
+                            if data:
+                                result.append((data, channel))
+                            else:
+                                break
+                    else:
+                        data = channel.read()
                         result.append((data, channel))
                 except EndpointClosedException:
                     result.append((b'', channel))

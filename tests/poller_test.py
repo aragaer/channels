@@ -128,7 +128,7 @@ class PollerTest(unittest.TestCase):
 
         self.assertEqual(result, [(b'', cl_chan)])
 
-    def test_lines(self):
+    def test_partial_line(self):
         serv = self._setup_server()
         addr, port = serv.getsockname()
         self._poller.add_server(serv)
@@ -150,3 +150,21 @@ class PollerTest(unittest.TestCase):
         result = list(self._poller.poll(0.01))
 
         self.assertEqual(result, [(b'testpost\n', cl_chan)])
+
+    def test_lines(self):
+        serv = self._setup_server()
+        addr, port = serv.getsockname()
+        self._poller.add_server(serv)
+        client = socket.create_connection((addr, port))
+        result = list(self._poller.poll(0.01))  # accepts the client
+        cl_chan = result[0][0][1]
+        self._poller.unregister(cl_chan)
+        cl_chan = LineChannel(cl_chan)
+        self._poller.register(cl_chan)
+
+        client.send(b'test\nrest\n')
+
+        result = list(self._poller.poll(0.01))
+
+        self.assertEqual(result, [(b'test\n', cl_chan),
+                                  (b'rest\n', cl_chan)])
