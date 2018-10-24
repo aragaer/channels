@@ -1,7 +1,7 @@
 import socket
 import unittest
 
-from channels import Channel, EndpointClosedException
+from channels import Channel, EndpointClosedException, LineChannel
 from channels.poller import Poller
 from channels.testing import TestChannel
 
@@ -127,3 +127,26 @@ class PollerTest(unittest.TestCase):
         result = list(self._poller.poll(0.01))
 
         self.assertEqual(result, [(b'', cl_chan)])
+
+    def test_lines(self):
+        serv = self._setup_server()
+        addr, port = serv.getsockname()
+        self._poller.add_server(serv)
+        client = socket.create_connection((addr, port))
+        result = list(self._poller.poll(0.01))  # accepts the client
+        cl_chan = result[0][0][1]
+        self._poller.unregister(cl_chan)
+        cl_chan = LineChannel(cl_chan)
+        self._poller.register(cl_chan)
+
+        client.send(b'test')
+
+        result = list(self._poller.poll(0.01))
+
+        self.assertEqual(result, [])
+
+        client.send(b'post\n')
+
+        result = list(self._poller.poll(0.01))
+
+        self.assertEqual(result, [(b'testpost\n', cl_chan)])

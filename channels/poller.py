@@ -24,7 +24,8 @@ class Poller:
                 channel = self._channels[fd]
                 try:
                     data = channel.read()
-                    result.append((data, channel))
+                    if data:
+                        result.append((data, channel))
                 except EndpointClosedException:
                     result.append((b'', channel))
             else:
