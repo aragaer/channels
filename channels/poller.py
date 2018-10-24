@@ -10,10 +10,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class Poller:
 
-    def __init__(self):
+    def __init__(self, *, buffering=None):
         self._servers = {}
         self._channels = {}
         self._poll = select.poll()
+        self._buffering = buffering
 
     def poll(self, timeout=None):
         if timeout is not None:
@@ -39,6 +40,8 @@ class Poller:
                 server = self._servers[fd]
                 sock, addr = server.accept()
                 client = SocketChannel(sock)
+                if self._buffering == 'line':
+                    client = LineChannel(client)
                 self.register(client)
                 result.append(((addr, client), server))
         return result

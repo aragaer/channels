@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `buffering` parameter for Poller class
+
 ### Changed
 - Poller will return multiple results for line-based channels when there are several lines
 

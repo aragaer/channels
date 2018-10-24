@@ -168,3 +168,40 @@ class PollerTest(unittest.TestCase):
 
         self.assertEqual(result, [(b'test\n', cl_chan),
                                   (b'rest\n', cl_chan)])
+
+
+class PollerBufferingTest(unittest.TestCase):
+
+    def test_bytes_poller(self):
+        poller = Poller()
+
+        serv = socket.socket()
+        serv.bind(('127.0.0.1', 0))
+        serv.listen(0)
+        self.addCleanup(serv.close)
+
+        addr, port = serv.getsockname()
+        poller.add_server(serv)
+
+        client = socket.create_connection((addr, port))
+        result = list(poller.poll(0.01))  # accepts the client
+        cl_chan = result[0][0][1]
+
+        self.assertNotIsInstance(cl_chan, LineChannel)
+
+    def test_line_poller(self):
+        poller = Poller(buffering='line')
+
+        serv = socket.socket()
+        serv.bind(('127.0.0.1', 0))
+        serv.listen(0)
+        self.addCleanup(serv.close)
+
+        addr, port = serv.getsockname()
+        poller.add_server(serv)
+
+        client = socket.create_connection((addr, port))
+        result = list(poller.poll(0.01))  # accepts the client
+        cl_chan = result[0][0][1]
+
+        self.assertIsInstance(cl_chan, LineChannel)

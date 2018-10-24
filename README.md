@@ -61,11 +61,17 @@ might not be ending with `b'\n'`).
 
 (in package channels.testing)
 
-Provides `put` and `get` methods to to feed data to `read` and fetch "written" data respectively.
+Provides `put` and `get` methods to to feed data to `read` and fetch
+"written" data respectively.
 
 ### Poller
 Poller is a wrapper for `select.poll` that also supports accepting and
 keeping track of TCP/Unix clients.
+
+`Poller(buffering=None)`
+
+Creates a poller object. If `buffering` is `'line'`, all accepted
+client connections will be line-buffered.
 
 `register(self, channel)`
 
