@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="yet-another-io-channels-library",
-    version="0.1.1",
+    version="0.2.0",
     author="Ilya Konovalov",
     author_email="aragaer@gmail.com",
     description="Simple IO channels library",
@@ -17,10 +17,12 @@ setup(
     keywords="socket pipe",
     url="https://github.com/aragaer/channels",
     packages=["channels"],
+    platforms=["UNIX"],
     classifiers=[
         "Topic :: Utilities",
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
+        "Operating System :: POSIX",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
