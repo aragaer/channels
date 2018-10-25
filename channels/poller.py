@@ -2,7 +2,7 @@ import logging
 import select
 import time
 
-from .channel import EndpointClosedException, LineChannel, SocketChannel
+from .channel import EndpointClosedException, SocketChannel
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -10,11 +10,20 @@ _LOGGER = logging.getLogger(__name__)
 
 class Poller:
 
-    def __init__(self, *, buffering=None):
+    def __init__(self, *, buffering='bytes'):
         self._servers = {}
         self._channels = {}
         self._poll = select.poll()
         self._buffering = buffering
+
+    @staticmethod
+    def _readlines(channel):
+        result = []
+        while True:
+            data = channel.read()
+            if not data:
+                return result
+            result.append(data)
 
     def poll(self, timeout=None):
         if timeout is not None:
@@ -24,24 +33,17 @@ class Poller:
             if fd in self._channels:
                 channel = self._channels[fd]
                 try:
-                    if isinstance(channel, LineChannel):
-                        while True:
-                            data = channel.read()
-                            if data:
-                                result.append((data, channel))
-                            else:
-                                break
+                    if channel.buffering == 'line':
+                        result.extend([(data, channel)
+                                       for data in self._readlines(channel)])
                     else:
-                        data = channel.read()
-                        result.append((data, channel))
+                        result.append((channel.read(), channel))
                 except EndpointClosedException:
                     result.append((b'', channel))
             else:
                 server = self._servers[fd]
                 sock, addr = server.accept()
-                client = SocketChannel(sock)
-                if self._buffering == 'line':
-                    client = LineChannel(client)
+                client = SocketChannel(sock, buffering=self._buffering)
                 self.register(client)
                 result.append(((addr, client), server))
         return result

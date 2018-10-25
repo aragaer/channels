@@ -1,11 +1,25 @@
 import socket
 import unittest
 
-from channels import Channel, EndpointClosedException, LineChannel
+from channels import Channel, EndpointClosedException
 from channels.poller import Poller
 from channels.testing import TestChannel
 
 from utils import timeout
+
+
+def _connect_and_get_client_channel(tc, poller):
+    serv = socket.socket()
+    serv.bind(('127.0.0.1', 0))
+    serv.listen(0)
+    tc.addCleanup(serv.close)
+
+    addr, port = serv.getsockname()
+    poller.add_server(serv)
+
+    client = socket.create_connection((addr, port))
+    result = list(poller.poll(0.01))  # accepts the client
+    return client, result[0][0][1]
 
 
 class PollerTest(unittest.TestCase):
@@ -48,28 +62,8 @@ class PollerTest(unittest.TestCase):
 
         self.assertEqual(list(result), [])
 
-    def _setup_server(self):
-        serv = socket.socket()
-        serv.bind(('127.0.0.1', 0))
-        serv.listen(0)
-        self.addCleanup(serv.close)
-        return serv
-
     def test_poll_accept(self):
-        serv = self._setup_server()
-        addr, port = serv.getsockname()
-
-        self._poller.add_server(serv)
-
-        client = socket.create_connection((addr, port))
-        cl_addr = client.getsockname()
-        result = list(self._poller.poll(0.01))
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0][0][0], cl_addr)
-        self.assertIsInstance(result[0][0][1], Channel)
-        self.assertEqual(result[0][1], serv)
-
-        cl_chan = result[0][0][1]
+        client, cl_chan = _connect_and_get_client_channel(self, self._poller)
 
         client.send(b'hello\n')
 
@@ -86,7 +80,10 @@ class PollerTest(unittest.TestCase):
             chan.read()
 
     def test_close_all_servers(self):
-        serv = self._setup_server()
+        serv = socket.socket()
+        serv.bind(('127.0.0.1', 0))
+        serv.listen(0)
+        self.addCleanup(serv.close)
         self._poller.add_server(serv)
 
         self._poller.close_all()
@@ -116,58 +113,43 @@ class PollerTest(unittest.TestCase):
         self.assertEquals(result, [(b'', chan)])
 
     def test_disconnect(self):
-        serv = self._setup_server()
-        addr, port = serv.getsockname()
-        self._poller.add_server(serv)
-        client = socket.create_connection((addr, port))
-        result = list(self._poller.poll(0.01))  # accepts the client
-        cl_chan = result[0][0][1]
+        client, cl_chan = _connect_and_get_client_channel(self, self._poller)
 
         client.close()
         result = list(self._poller.poll(0.01))
 
         self.assertEqual(result, [(b'', cl_chan)])
 
-    def test_partial_line(self):
-        serv = self._setup_server()
-        addr, port = serv.getsockname()
-        self._poller.add_server(serv)
-        client = socket.create_connection((addr, port))
-        result = list(self._poller.poll(0.01))  # accepts the client
-        cl_chan = result[0][0][1]
-        self._poller.unregister(cl_chan)
-        cl_chan = LineChannel(cl_chan)
-        self._poller.register(cl_chan)
 
-        client.send(b'test')
+class LineBufferedPollerTest(unittest.TestCase):
+
+    def setUp(self):
+        self._poller = Poller(buffering='line')
+        self._client, self._cl_chan = _connect_and_get_client_channel(self, self._poller)
+
+    def tearDown(self):
+        self._poller.close_all()
+
+    def test_partial_line(self):
+        self._client.send(b'test')
 
         result = list(self._poller.poll(0.01))
 
         self.assertEqual(result, [])
 
-        client.send(b'post\n')
+        self._client.send(b'post\n')
 
         result = list(self._poller.poll(0.01))
 
-        self.assertEqual(result, [(b'testpost\n', cl_chan)])
+        self.assertEqual(result, [(b'testpost\n', self._cl_chan)])
 
     def test_lines(self):
-        serv = self._setup_server()
-        addr, port = serv.getsockname()
-        self._poller.add_server(serv)
-        client = socket.create_connection((addr, port))
-        result = list(self._poller.poll(0.01))  # accepts the client
-        cl_chan = result[0][0][1]
-        self._poller.unregister(cl_chan)
-        cl_chan = LineChannel(cl_chan)
-        self._poller.register(cl_chan)
-
-        client.send(b'test\nrest\n')
+        self._client.send(b'test\nrest\n')
 
         result = list(self._poller.poll(0.01))
 
-        self.assertEqual(result, [(b'test\n', cl_chan),
-                                  (b'rest\n', cl_chan)])
+        self.assertEqual(result, [(b'test\n', self._cl_chan),
+                                  (b'rest\n', self._cl_chan)])
 
 
 class PollerBufferingTest(unittest.TestCase):
@@ -175,33 +157,13 @@ class PollerBufferingTest(unittest.TestCase):
     def test_bytes_poller(self):
         poller = Poller()
 
-        serv = socket.socket()
-        serv.bind(('127.0.0.1', 0))
-        serv.listen(0)
-        self.addCleanup(serv.close)
+        _, cl_chan = _connect_and_get_client_channel(self, poller)
 
-        addr, port = serv.getsockname()
-        poller.add_server(serv)
-
-        client = socket.create_connection((addr, port))
-        result = list(poller.poll(0.01))  # accepts the client
-        cl_chan = result[0][0][1]
-
-        self.assertNotIsInstance(cl_chan, LineChannel)
+        self.assertEqual(cl_chan.buffering, 'bytes')
 
     def test_line_poller(self):
         poller = Poller(buffering='line')
 
-        serv = socket.socket()
-        serv.bind(('127.0.0.1', 0))
-        serv.listen(0)
-        self.addCleanup(serv.close)
+        _, cl_chan = _connect_and_get_client_channel(self, poller)
 
-        addr, port = serv.getsockname()
-        poller.add_server(serv)
-
-        client = socket.create_connection((addr, port))
-        result = list(poller.poll(0.01))  # accepts the client
-        cl_chan = result[0][0][1]
-
-        self.assertIsInstance(cl_chan, LineChannel)
+        self.assertEqual(cl_chan.buffering, 'line')

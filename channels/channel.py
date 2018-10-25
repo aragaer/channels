@@ -10,8 +10,22 @@ class EndpointClosedException(Exception):
 
 class Channel(metaclass=ABCMeta):
 
+    def __init__(self, *, buffering='bytes'):
+        self._buffer = b''
+        self._lf = 0
+
+        self._buffering = buffering
+        if buffering == 'line':
+            self.read = self._readline
+        else:
+            self.read = self._read
+
+    @property
+    def buffering(self):
+        return self._buffering
+
     @abstractmethod
-    def read(self): #pragma: no cover
+    def _read(self): #pragma: no cover
         raise NotImplementedError
 
     @abstractmethod
@@ -25,13 +39,46 @@ class Channel(metaclass=ABCMeta):
     def get_fd(self): #pragma: no cover
         raise NotImplementedError
 
+    def _read_into_buffer(self):
+        new_bytes = self._read()
+        self._lf = new_bytes.find(b'\n')+1
+        if self._lf:
+            self._lf += len(self._buffer)
+        self._buffer += new_bytes
+
+    def _get_first_line(self):
+        result, self._buffer = self._buffer[:self._lf], self._buffer[self._lf:]
+        self._lf = self._buffer.find(b'\n')+1
+        return result
+
+    def _readline(self):
+        if self._lf:
+            return self._get_first_line()
+
+        try:
+            self._read_into_buffer()
+        except EndpointClosedException:
+            if not self._buffer:
+                raise
+
+        if self._lf:
+            return self._get_first_line()
+
+        try:
+            self._read_into_buffer()
+        except EndpointClosedException:
+            result, self._buffer = self._buffer, b''
+            return result
+        return b''
+
 
 class PipeChannel(Channel):
 
     _in = None
     _out = None
 
-    def __init__(self, faucet=None, sink=None):
+    def __init__(self, faucet=None, sink=None, **kwargs):
+        super().__init__(**kwargs)
         if faucet is not None:
             fl = fcntl.fcntl(faucet, fcntl.F_GETFL)
             fcntl.fcntl(faucet, fcntl.F_SETFL, fl | os.O_NONBLOCK)
@@ -39,7 +86,7 @@ class PipeChannel(Channel):
         if sink is not None:
             self._out = os.fdopen(sink, mode='wb', buffering=0)
 
-    def read(self):
+    def _read(self):
         try:
             result = self._in.read()
             if result is None:
@@ -72,11 +119,12 @@ class PipeChannel(Channel):
 
 class SocketChannel(Channel):
 
-    def __init__(self, sock):
+    def __init__(self, sock, **kwargs):
+        super().__init__(**kwargs)
         self._sock = sock
         self._sock.setblocking(False)
 
-    def read(self):
+    def _read(self):
         try:
             result = self._sock.recv(4096)
             if not result:
@@ -99,52 +147,3 @@ class SocketChannel(Channel):
 
     def get_fd(self):
         return self._sock.fileno()
-
-
-class LineChannel(Channel):
-
-    def __init__(self, inner):
-        self._inner = inner
-        self._buffer = b''
-        self._lf = 0
-
-    def _read(self):
-        new_bytes = self._inner.read()
-        self._lf = new_bytes.find(b'\n')+1
-        if self._lf:
-            self._lf += len(self._buffer)
-        self._buffer += new_bytes
-
-    def _get_first_line(self):
-        result, self._buffer = self._buffer[:self._lf], self._buffer[self._lf:]
-        self._lf = self._buffer.find(b'\n')+1
-        return result
-
-    def read(self):
-        if self._lf:
-            return self._get_first_line()
-
-        try:
-            self._read()
-        except EndpointClosedException:
-            if not self._buffer:
-                raise
-
-        if self._lf:
-            return self._get_first_line()
-
-        try:
-            self._read()
-        except EndpointClosedException:
-            result, self._buffer = self._buffer, b''
-            return result
-        return b''
-
-    def write(self, *data):
-        return self._inner.write(*data)
-
-    def close(self):
-        return self._inner.close()
-
-    def get_fd(self):
-        return self._inner.get_fd()

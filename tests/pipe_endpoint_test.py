@@ -19,6 +19,11 @@ class PipeChannelTest(unittest.TestCase):
         self.assertEqual(channel.read(), b'')
         self.assertEqual(channel.read(), b'')
 
+    def test_buffering_property(self):
+        that_faucet_fd, this_sink_fd = os.pipe()
+        channel = PipeChannel(faucet=that_faucet_fd)
+        self.assertEqual(channel.buffering, 'bytes')
+
     def test_write(self):
         this_faucet_fd, that_sink_fd = os.pipe()
         channel = PipeChannel(sink=that_sink_fd)

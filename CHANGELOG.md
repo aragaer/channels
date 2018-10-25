@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - `buffering` parameter for Poller class
+- `buffering` parameter for channels
 
 ### Changed
 - Poller will return multiple results for line-based channels when there are several lines
+
+### Removed
+- LineChannel class
 
 ### Fixed
 - Poller will no longer send empty messages for line-based channels

@@ -1,1 +1,1 @@
-from .channel import Channel, PipeChannel, SocketChannel, LineChannel, EndpointClosedException
+from .channel import Channel, PipeChannel, SocketChannel, EndpointClosedException
