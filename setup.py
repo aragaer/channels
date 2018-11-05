@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="yet-another-io-channels-library",
-    version="0.2.1",
+    version="0.2.2",
     author="Ilya Konovalov",
     author_email="aragaer@gmail.com",
     description="Simple IO channels library",
