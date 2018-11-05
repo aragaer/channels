@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Poller now registers server for POLLIN only.
+- Poller unregisters the client channel when it is closed
 
 ## [0.2.1] - 2018-11-05
 ### Fixed

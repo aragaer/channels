@@ -101,6 +101,14 @@ class PollerTest(unittest.TestCase):
         with self.assertRaisesRegex(Exception, "timeout"), timeout(0.02):
             self._poller.poll()
 
+    def test_unregister_twice(self):
+        chan = TestChannel()
+        self._poller.register(chan)
+        chan.put(b'hello\n')
+
+        self._poller.unregister(chan)
+        self._poller.unregister(chan)
+
     def test_closed(self):
         chan = TestChannel()
         self._poller.register(chan)
@@ -119,6 +127,15 @@ class PollerTest(unittest.TestCase):
         result = list(self._poller.poll(0.01))
 
         self.assertEqual(result, [(b'', cl_chan)])
+
+    def test_unregister_on_disconnect(self):
+        client, cl_chan = _connect_and_get_client_channel(self, self._poller)
+        client.close()
+        self._poller.poll(0.01)
+
+        result = list(self._poller.poll(0.01))
+
+        self.assertEqual(result, [])
 
 
 class LineBufferedPollerTest(unittest.TestCase):

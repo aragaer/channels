@@ -92,7 +92,8 @@ automatically register clients.
 
 `unregister(self, channel)`
 
-Removes a registered channel.
+Removes a registered channel. Silently does nothing if channel is not
+registered.
 
 `close_all(self)`
 

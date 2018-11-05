@@ -54,6 +54,7 @@ class Poller:
                         result.append((channel.read(), channel))
                 except EndpointClosedException:
                     result.append((b'', channel))
+                    self._unregister(channel, fd)
             elif event & select.POLLIN:
                 server = self._servers[fd]
                 sock, addr = server.accept()
@@ -78,8 +79,12 @@ class Poller:
         for server in self._servers.values():
             server.close()
 
-    def unregister(self, channel):
-        fd = channel.get_fd()
+    def _unregister(self, channel, fd):
+        if fd not in self._channels:
+            return
         self._poll.unregister(fd)
         del self._channels[fd]
         _LOGGER.debug("Unregistered channel %s with fd %d", channel, fd)
+
+    def unregister(self, channel):
+        self._unregister(channel, channel.get_fd())
