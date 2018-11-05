@@ -7,6 +7,19 @@ from .channel import EndpointClosedException, SocketChannel
 
 _LOGGER = logging.getLogger(__name__)
 
+_POLLBITS = {
+    'POLLIN': select.POLLIN,
+    'POLLERR': select.POLLERR,
+    'POLLOUT': select.POLLOUT,
+}
+
+def _event_to_str(event):
+    result = []
+    for key, val in _POLLBITS.items():
+        if event & val:
+            result.append(key)
+    return "{:b} {}".format(event, '|'.join(result))
+
 
 class Poller:
 
@@ -30,6 +43,7 @@ class Poller:
             timeout = timeout * 1000
         result = []
         for fd, event in self._poll.poll(timeout):
+            _LOGGER.debug("Got event %s on fd %d", _event_to_str(event), fd)
             if fd in self._channels:
                 channel = self._channels[fd]
                 try:
@@ -40,7 +54,7 @@ class Poller:
                         result.append((channel.read(), channel))
                 except EndpointClosedException:
                     result.append((b'', channel))
-            else:
+            elif event & select.POLLIN:
                 server = self._servers[fd]
                 sock, addr = server.accept()
                 client = SocketChannel(sock, buffering=self._buffering)
