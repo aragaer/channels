@@ -70,7 +70,7 @@ class Poller:
 
     def add_server(self, server):
         self._servers[server.fileno()] = server
-        self._poll.register(server.fileno())
+        self._poll.register(server.fileno(), select.POLLIN)
 
     def close_all(self):
         for channel in self._channels.values():
