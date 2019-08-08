@@ -5,8 +5,10 @@ interface to both.
 
 Example:
 
-    pipe_chan = PipeChannel(sys.stdin.fileno(), sys.stdout.fileno())
-	sock_chan = SocketChannel(socket.create_connection(('127.0.0.1', 8080))
+```python
+pipe_chan = PipeChannel(sys.stdin.fileno(), sys.stdout.fileno())
+sock_chan = SocketChannel(socket.create_connection(('127.0.0.1', 8080))
+```
 
 ## Classes
 
@@ -14,20 +16,28 @@ Example:
 Channel is the base class for different channels. Every channel
 implements the following methods:
 
-`read(self)`
+```python
+read(self)
+```
 
 Performs a non-blocking read and returns any bytes available. Raises
 `EndpointClosedException` if the channel is closed.
 
-`write(self, *data)`
+```python
+write(self, *data)
+```
 
 Writes chunks of bytes to the channel. Raises `EndpointClosedException`.
 
-`close(self)`
+```python
+close(self)
+```
 
 Closes the channel and frees up the resources.
 
-`get_fd(self)`
+```python
+get_fd(self)
+```
 
 Returns a file descriptor number that can be used for `poll` or
 `epoll` for reading. Raises `NotImplementedError` if (custom) channel
@@ -41,7 +51,9 @@ The following channel classes are implemented:
 
 ### PipeChannel
 
-`PipeChannel(faucet=None, sink=None, *, buffering='bytes')`
+```python
+PipeChannel(faucet=None, sink=None, *, buffering='bytes')
+```
 
 `faucet` should be a file descriptor open for reading. `sink` should
 be a file descriptor open for writing. If both are provided, the
@@ -56,7 +68,9 @@ buffer until it is exhausted. Last line maybe an incomplete line (no
 
 ### SocketChannel
 
-`SocketChannel(sock, *, buffering='bytes')`
+```python
+SocketChannel(sock, *, buffering='bytes')
+```
 
 Wraps a socket for non-blocking IO. See PipeChannel for more info on
 `buffering` parameter.
@@ -65,7 +79,9 @@ Wraps a socket for non-blocking IO. See PipeChannel for more info on
 
 (in package channels.testing)
 
-`TestChannel(*, buffering='bytes')`
+```python
+TestChannel(*, buffering='bytes')
+```
 
 See PipeChannel for more info on `buffering` parameter.
 
@@ -76,30 +92,42 @@ Provides `put` and `get` methods to to feed data to `read` and fetch
 Poller is a wrapper for `select.poll` that also supports accepting and
 keeping track of TCP/Unix clients.
 
-`Poller(*, buffering='bytes')`
+```python
+Poller(*, buffering='bytes')
+```
 
 Creates a poller object. All accepted client channels inherit the
 `buffering` parameter.
 
-`register(self, channel)`
+```python
+register(self, channel)
+```
 
 Registers the channel for polling.
 
-`add_server(self, sock)`
+```python
+add_server(self, sock)]
+```
 
 Registers a server socket. Poller will accept incoming connections and
 automatically register clients.
 
-`unregister(self, channel)`
+```python
+unregister(self, channel)
+```
 
 Removes a registered channel. Silently does nothing if channel is not
 registered.
 
-`close_all(self)`
+```python
+close_all(self)
+```
 
 Closes all registered channels and servers.
 
-`poll(self, timeout=None)`
+```python
+poll(self, timeout=None)
+```
 
 Performs a single call to `select.poll()`. `timeout` is the number of
 seconds for polling or `None` for infinite polling. Return value is a
