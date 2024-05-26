@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Using nose2 instead of nose now
+
+### Fixed
+- No data was delivered when PipeChannel was closed before data was read
+
 ## [0.2.2] - 2018-11-05
 ### Fixed
 - Poller now registers server for POLLIN only.

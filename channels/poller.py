@@ -48,8 +48,8 @@ class Poller:
                 channel = self._channels[fd]
                 try:
                     if channel.buffering == 'line':
-                        result.extend([(data, channel)
-                                       for data in self._readlines(channel)])
+                        for data in self._readlines(channel):
+                            result.append((data, channel))
                     else:
                         result.append((channel.read(), channel))
                 except EndpointClosedException:

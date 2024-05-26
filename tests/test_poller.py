@@ -118,7 +118,7 @@ class PollerTest(unittest.TestCase):
         with timeout(0.01):
             result = self._poller.poll()
 
-        self.assertEquals(result, [(b'', chan)])
+        self.assertEqual(result, [(b'', chan)])
 
     def test_disconnect(self):
         client, cl_chan = _connect_and_get_client_channel(self, self._poller)
