@@ -31,12 +31,11 @@ class Poller:
 
     @staticmethod
     def _readlines(channel):
-        result = []
         while True:
             data = channel.read()
             if not data:
-                return result
-            result.append(data)
+                break
+            yield data
 
     def poll(self, timeout=None):
         if timeout is not None:
