@@ -1,14 +1,11 @@
-.PHONY: test pypi-test pypi dist
+.PHONY: test dist pypi
 
 test:
 	nose2
 
 dist:
 	rm -rf dist
-	python ./setup.py sdist bdist_wheel
+	poetry build
 
-test-pypi: dist
-	twine upload dist/* -r testpypi
-
-pypi:
-	twine upload dist/*
+pypi: dist
+	poetry publish

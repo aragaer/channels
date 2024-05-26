@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "yet-another-io-channels-library"
+version = "0.2.3"
+description = "Simple IO channels library"
+authors = ["Ilya Konovalov <aragaer@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+         {include = "channels"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.4"
+
+[tool.poetry.group.dev.dependencies]
+nose2 = "^0.14.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
