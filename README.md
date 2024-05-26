@@ -106,7 +106,7 @@ register(self, channel)
 Registers the channel for polling.
 
 ```python
-add_server(self, sock)]
+add_server(self, sock)
 ```
 
 Registers a server socket. Poller will accept incoming connections and
