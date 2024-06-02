@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yet-another-io-channels-library"
-version = "0.2.4"
+version = "0.2.4.post1"
 description = "Simple IO channels library"
 authors = ["Ilya Konovalov <aragaer@gmail.com>"]
 license = "MIT"

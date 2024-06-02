@@ -6,6 +6,8 @@ interface to both.
 Example:
 
 ```python
+from channels import PipeChannel, SocketChannel
+
 pipe_chan = PipeChannel(sys.stdin.fileno(), sys.stdout.fileno())
 sock_chan = SocketChannel(socket.create_connection(('127.0.0.1', 8080))
 ```
@@ -13,6 +15,7 @@ sock_chan = SocketChannel(socket.create_connection(('127.0.0.1', 8080))
 ## Classes
 
 ### Channel
+
 Channel is the base class for different channels. Every channel
 implements the following methods:
 
@@ -52,6 +55,8 @@ The following channel classes are implemented:
 ### PipeChannel
 
 ```python
+from channels import PipeChannel
+
 PipeChannel(faucet=None, sink=None, *, buffering='bytes')
 ```
 
@@ -69,6 +74,8 @@ buffer until it is exhausted. Last line maybe an incomplete line (no
 ### SocketChannel
 
 ```python
+from channels import SocketChannel
+
 SocketChannel(sock, *, buffering='bytes')
 ```
 
@@ -77,9 +84,11 @@ Wraps a socket for non-blocking IO. See PipeChannel for more info on
 
 ### TestChannel
 
-(in package channels.testing)
+(in package `channels.testing`)
 
 ```python
+from channels.testing import TestChannel
+
 TestChannel(*, buffering='bytes')
 ```
 
@@ -89,10 +98,15 @@ Provides `put` and `get` methods to to feed data to `read` and fetch
 "written" data respectively.
 
 ### Poller
+
+(in package `channels.poller`)
+
 Poller is a wrapper for `select.poll` that also supports accepting and
 keeping track of TCP/Unix clients.
 
 ```python
+from channels.poller import Poller
+
 Poller(*, buffering='bytes')
 ```
 
